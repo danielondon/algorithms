@@ -1,0 +1,2 @@
+SET(TARGET quick_sort)
+ADD_EXECUTABLE (${TARGET} ${TARGET}.cpp)

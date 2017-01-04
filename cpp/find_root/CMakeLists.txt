@@ -1,0 +1,2 @@
+SET(TARGET find_root)
+ADD_EXECUTABLE (${TARGET} ${TARGET}.cpp)

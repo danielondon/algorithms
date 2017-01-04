@@ -1,0 +1,2 @@
+SET(TARGET prime_numbers)
+ADD_EXECUTABLE (${TARGET} ${TARGET}.cpp)

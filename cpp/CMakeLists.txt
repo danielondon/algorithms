@@ -1,0 +1,23 @@
+#####################################
+# APPLICATIONS
+#####################################
+
+ADD_SUBDIRECTORY(binary_search)
+ADD_SUBDIRECTORY(count_bits_number)
+ADD_SUBDIRECTORY(excel_col_num)
+ADD_SUBDIRECTORY(factors)
+ADD_SUBDIRECTORY(find_root)
+ADD_SUBDIRECTORY(get_number_of_possible_denominations)
+ADD_SUBDIRECTORY(hanoi)
+ADD_SUBDIRECTORY(heap_sort)
+ADD_SUBDIRECTORY(max_number_from_string)
+ADD_SUBDIRECTORY(max_profit_stocks)
+ADD_SUBDIRECTORY(max_sum_array)
+ADD_SUBDIRECTORY(merge_sort)
+ADD_SUBDIRECTORY(multiply_vector)
+ADD_SUBDIRECTORY(prime_numbers)
+ADD_SUBDIRECTORY(print_matrix)
+ADD_SUBDIRECTORY(quick_sort)
+ADD_SUBDIRECTORY(search_range)
+ADD_SUBDIRECTORY(stack_with_min)
+ADD_SUBDIRECTORY(three_integers_sum)

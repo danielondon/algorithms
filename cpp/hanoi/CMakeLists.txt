@@ -1,0 +1,2 @@
+SET(TARGET hanoi)
+ADD_EXECUTABLE (${TARGET} ${TARGET}.cpp)

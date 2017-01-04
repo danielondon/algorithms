@@ -1,0 +1,2 @@
+SET(TARGET excel_col_num)
+ADD_EXECUTABLE (${TARGET} ${TARGET}.cpp)

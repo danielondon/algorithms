@@ -1,0 +1,2 @@
+SET(TARGET merge_sort)
+ADD_EXECUTABLE (${TARGET} ${TARGET}.cpp)

@@ -1,0 +1,2 @@
+SET(TARGET search_range)
+ADD_EXECUTABLE (${TARGET} ${TARGET}.cpp)

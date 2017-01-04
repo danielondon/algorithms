@@ -1,0 +1,2 @@
+SET(TARGET heap_sort)
+ADD_EXECUTABLE (${TARGET} ${TARGET}.cpp)

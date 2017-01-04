@@ -3,6 +3,5 @@ Daniel Londono: I am a sofware engineer with about 10 years of experience in dif
 
 # algorithms
 This is a project to try different implementations for some of the common algorithmic problems
-
-# Most of the implementation is done in C++, however I keep track of some implementation in Python
+Most of the implementation is done in C++, however I keep track of some implementation in Python
 

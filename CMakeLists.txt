@@ -3,6 +3,6 @@ PROJECT(cpp_algorithms)
 
 # C++ 11
 INCLUDE_DIRECTORIES(cpp/include)
-SET(CMAKE_CXX_STANDARD 11)
+SET(CMAKE_CXX_STANDARD 17)
 
 add_subdirectory(cpp)

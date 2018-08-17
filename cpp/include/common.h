@@ -85,8 +85,6 @@ struct Graph
         cout<<"Destroying Graph"<<endl;
     }
     
-    vector<shared_ptr<Vertex>> nodes;
-    
     shared_ptr<Vertex> getVertex(int id)
     {
         auto it = find_if(nodes.begin(), nodes.end(), [&] (const shared_ptr<Vertex>& v) { return v->id == id; } );
@@ -143,4 +141,13 @@ struct Graph
             cout<<"From Vertex not found"<<endl;
         }
     }
+
+    const vector<shared_ptr<Vertex>>& getNodes() const
+    {
+        return nodes;
+    }
+
+private:
+    vector<shared_ptr<Vertex>> nodes;
+
 };

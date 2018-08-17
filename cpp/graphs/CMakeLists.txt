@@ -1,0 +1,2 @@
+SET(TARGET graphs)
+ADD_EXECUTABLE (${TARGET} ${TARGET}.cpp)

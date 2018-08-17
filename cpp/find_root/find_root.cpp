@@ -11,7 +11,7 @@ bool findRoute(Graph & g, shared_ptr<Vertex> node1, shared_ptr<Vertex> node2)
         return true;
     
     bool res = false;
-    for(auto & vertex : g.nodes)
+    for(auto & vertex : g.getNodes())
     {
         vertex->visited = false;
     }

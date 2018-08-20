@@ -36,27 +36,34 @@ namespace graphs
         {
             cout << "Destroying Node " << data << endl;
         }
-
-        void addChildren(weak_ptr<Edge<T>> to)
+    private:
+        // It was not moved to a free function, becasue the method isDetached is private and then can not be accessed from the free function.
+        void addOrReplace(vector<weak_ptr<Edge<T>>> & edges, weak_ptr<Edge<T>> const& newEdge)
         {
-            //auto nextAvailable = findNextInvalidPointer(children);
-            auto nextAvailable = find_if(children.begin(), children.end(), [](const weak_ptr<Edge<T>>& e) { return e.expired() ? true : e.lock()->isDetached(); });
+            auto nextAvailable = find_if(edges.begin(), edges.end(), [](const weak_ptr<Edge<T>>& e) { return e.expired() ? true : e.lock()->isDetached(); });
             // If there is some expired pointer, replace it
-            if (nextAvailable != children.end())
+            if (nextAvailable != edges.end())
             {
-                //*children.emplace(nextAvailable, to);
-                *nextAvailable = to;
+                *nextAvailable = newEdge;
             }
             else
             {
-                children.push_back(to);
+                edges.push_back(newEdge);
             }
-            auto ptrEdge = to.lock();
-            auto ptrNode = ptrEdge->getTo().lock();
-            cout << "Edge from Node " << data << " to " << ptrNode->getData() << " was added." << endl;
         }
-        
-        void getChildren()
+
+        void addChild(weak_ptr<Edge<T>> to)
+        {
+            addOrReplace(children, to);
+        }
+
+        void addParent(weak_ptr<Edge<T>> from)
+        {
+            addOrReplace(parents, from);
+        }
+
+    public:
+        void getChildren() const
         {
             set<int> childrenIds;
             for (auto& childWeak : children)
@@ -71,10 +78,13 @@ namespace graphs
 
         int getId() const { return id; }
         T getData() const { return data; }
+        size_t getChildrenCount() const { return children.size(); }
+        size_t getParentsCount() const { return parents.size(); }
     private:
         int id;
         T data;
         vector<weak_ptr<Edge<T>>> children;
+        vector<weak_ptr<Edge<T>>> parents;
         friend class Graph<T>;
     };
 
@@ -110,6 +120,8 @@ namespace graphs
             cout << "Destroying Edge" << endl;
         }
         string getId() const { return id; }
+
+    private:
         const weak_ptr<Node<T>>& getFrom() const { return from; }
         const weak_ptr<Node<T>>& getTo() const { return to; }
         bool isDetached() const
@@ -122,6 +134,7 @@ namespace graphs
         string id;
         int weight = 0;        
         friend class Graph<T>;
+        friend class Node<T>;
     };
 
     template<class T>
@@ -140,73 +153,119 @@ namespace graphs
 
             // We can not use make_shared, since it is not friend of Node class
             shared_ptr<Node<T>> node (new Node<T>(id, id));
-            nodes[node->getId()] = node;
+            m_nodes[node->getId()] = node;
             return true;
         }
 
-        void removeDetachedEdges()
+        void removeEdges(vector<weak_ptr<Edge<T>>> const& edges, int nodeId, bool toOrFrom)
         {
-            // Find if there is any edge detached, so it can be reused
-            auto it = find_if(edges.begin(), edges.end(), [](auto &map_type) { return map_type.second->isDetached(); });
-            if (it != edges.end())
+            for (auto const& edge_to_wptr : edges)
             {
-                edges.erase(it);
-                removeDetachedEdges();
+                auto edge_to_sptr = edge_to_wptr.lock();
+                if (edge_to_sptr)
+                {
+                    weak_ptr<Node<T>> node_wptr;
+                    if (toOrFrom)
+                        node_wptr = edge_to_sptr->getTo();
+                    else
+                        node_wptr = edge_to_sptr->getFrom();
+
+                    auto node_sptr = node_wptr.lock();
+                    if (node_sptr)
+                    {
+                        string id;
+                        if (toOrFrom)
+                            id= createEdgeId(nodeId, node_sptr->getId());
+                        else 
+                            id = createEdgeId(node_sptr->getId(), nodeId);
+                        m_edges.erase(id);
+                    }
+                    else
+                        throw; // This should not happen
+                }
+                else
+                    throw;// This should not happen
+
+            }
+        }
+
+        bool removeDetachedEdges(int nodeId)
+        {
+            // SOLUTION 1: LOOK INTO ALL EDGES AND FIND ALL DETACHED EDGES
+            // Find if there is any edge detached, so it can be reused
+            //auto it = find_if(m_edges.begin(), m_edges.end(), [](auto &map_type) { return map_type.second->isDetached(); });
+            //if (it != m_edges.end())
+            //{
+            //    m_edges.erase(it);
+            //    removeDetachedEdges();
+            //}
+
+            // SOLUTION 2: SINCE EVERY NODE KNOWS ITS FROM AND TO EDGES, FIND THE SPECIFIC EDGES IN THE MAP AND REMOVE THEM
+            auto node = getNode(nodeId);
+            if (node)
+            {
+                removeEdges(node->children, nodeId, true);
+                removeEdges(node->parents, nodeId, false);
+            }
+            else
+            {
+                return false;
             }
         }
 
         bool addEdge(int fromId, int toId, int weigth)
         {
-            auto from = nodes.find(fromId);
-            auto to = nodes.find(toId);
-            if (from != nodes.end() && to != nodes.end())
+            auto from = m_nodes.find(fromId);
+            auto to = m_nodes.find(toId);
+            if (from != m_nodes.end() && to != m_nodes.end())
             {   
                 // Check if the edge exist
-                string edgeId = createEdgeId(fromId, toId);
-                if (edges.find(edgeId) != edges.end())
+                auto edgeId = createEdgeId(fromId, toId);
+                if (m_edges.find(edgeId) != m_edges.end())
                 {
                     cout << "edges already exist" << endl;
                     return false;
                 }
                 // We can not use make_shared, since it is not friend of Edge class
                 shared_ptr<Edge<T>> edge(new Edge<T>(from->second, to->second, edgeId, weigth));
-                edges[edgeId] = edge;
-                from->second->addChildren(edge);
+                m_edges[edgeId] = edge;
+                from->second->addChild(edge);
+                to->second->addParent(edge);
                 return true;
             }
             cout << "Edge was not added. Some of the nodes do not exist" << endl;
             return false;
         }
 
-        bool containsNode(int id)
+        bool containsNode(int id) const
         {
-            auto it = nodes.find(id);
-            return it != nodes.end();
+            auto it = m_nodes.find(id);
+            return it != m_nodes.end();
         }
 
         bool removeNode(int id)
         {
-            bool res = removeFromUnorderedMap(nodes, id);
-            removeDetachedEdges();
+            bool res = removeDetachedEdges(id);
+            res &= removeFromUnorderedMap(m_nodes, id);            
             return res;
         } 
 
         bool removeEdge(int fromId, int toId)
         {
-            return removeFromUnorderedMap(edges, createEdgeId(fromId, toId));
+            return removeFromUnorderedMap(m_edges, createEdgeId(fromId, toId));
         }
 
-        void print(int id)
+        void print(int id) const
         {
             cout << "Nodes " << getNodesCount() << endl;
             cout << "Edges " << getEdgesCount() << " and valid "<< getValidEdges()<<endl;
 
-            auto rootNode = nodes.find(id);
-            if (rootNode != nodes.end())
+            auto rootNode = m_nodes.find(id);
+            if (rootNode != m_nodes.end())
             {
                 // Track which nodes have been printed
                 unordered_map<int, bool> areNodesPrinted;
-                transform(nodes.begin(), nodes.end(), std::inserter(areNodesPrinted, areNodesPrinted.end()), [](auto const& map_type) { return std::make_pair(map_type.first, false); } );
+                transform(m_nodes.begin(), m_nodes.end(), std::inserter(areNodesPrinted, areNodesPrinted.end()), [](auto const& map_type) { return std::make_pair(map_type.first, false); } );
 
                 cout << " Root node " << rootNode->second->getData()<<endl;
                 removeFromUnorderedMap(areNodesPrinted, id);
@@ -214,18 +273,36 @@ namespace graphs
             }
         }
 
-        size_t getNodesCount() const { return nodes.size(); }
-        size_t getEdgesCount() const { return edges.size(); }
+        size_t getNodesCount() const { return m_nodes.size(); }
+        size_t getEdgesCount() const { return m_edges.size(); }
+        const shared_ptr <Node<T>> getNode(int nodeId) const
+        {
+            if (containsNode(nodeId))
+                return m_nodes.at(nodeId);
+            else
+                return nullptr;
+        }
+
+        const shared_ptr <Edge<T>> getEdge(int fromId, int toId) const
+        {
+            auto edgeId = createEdgeId(fromId, toId);
+            if (m_edges.find(edgeId) != m_edges.end())
+            {
+                return m_edges.at(edgeId);
+            }
+            else
+                return nullptr;
+        }
 
     private:
         int getValidEdges() const
         {
-            return count_if(edges.begin(), edges.end(), [](auto const& map_type) { return !map_type.second->isDetached(); });
+            return count_if(m_edges.begin(), m_edges.end(), [](auto const& map_type) { return !map_type.second->isDetached(); });
         }
                 
     private:
-        unordered_map<int, shared_ptr<Node<T>>> nodes;
-        unordered_map<string, shared_ptr<Edge<T>>> edges;
+        unordered_map<int, shared_ptr<Node<T>>> m_nodes;
+        unordered_map<string, shared_ptr<Edge<T>>> m_edges;
     };
 }
 

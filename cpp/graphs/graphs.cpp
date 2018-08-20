@@ -112,7 +112,6 @@ TEST(GraphTest, AddingRemovingEdges_DoNotCreateNewChildrenOrParents)
     EXPECT_NE(nullptr, g.getEdge(1, 3));
     EXPECT_NE(nullptr, g.getEdge(2, 3));
 
-
     // Check that nodes, do not create unnecessary children or parent
     EXPECT_EQ(2, g.getNode(1)->getChildrenCount()); 
     EXPECT_EQ(0, g.getNode(1)->getParentsCount());    
@@ -127,7 +126,7 @@ TEST(GraphTest, AddingRemovingEdges_DoNotCreateNewChildrenOrParents)
 TEST(GraphTest, PrintGraph)
 {
     Graph<int> g;
-    for (size_t i = 1; i <= 10; ++i)
+    for (int i = 10; i >= 1; --i)
         EXPECT_TRUE(g.addNode(i));
     EXPECT_TRUE(g.addEdge(1, 2, 10));
     EXPECT_TRUE(g.addEdge(1, 3, 20));
@@ -140,5 +139,6 @@ TEST(GraphTest, PrintGraph)
     EXPECT_TRUE(g.addEdge(7, 8, 10));
     EXPECT_TRUE(g.addEdge(2, 6, 10));
 
-    EXPECT_NO_THROW(g.print(4));
+    EXPECT_NO_THROW(g.print(1));
+    EXPECT_EQ(5, g.getMaxDepth());
 }

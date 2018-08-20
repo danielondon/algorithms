@@ -82,6 +82,29 @@ namespace graphs
             return ids;
         }
 
+        size_t getDepth(unordered_map<int, bool> & markedNodes) const
+        {
+            // Mark Node
+            markedNodes.at(getId()) = true;
+
+            size_t depth = 0;
+            size_t maxDepth = 1;
+            for (auto const& edge_wptr : m_children)
+            {
+                auto edge_sptr = edge_wptr.lock();
+                if (edge_sptr)
+                {
+                    auto node_sptr = edge_sptr->getTo().lock();
+                    depth = 1 + node_sptr->getDepth(markedNodes);
+                }
+
+                if (depth > maxDepth)
+                    maxDepth = depth;
+            }
+
+            return maxDepth;
+        }
+
     public:
         queue<int> getChildren() const { return getIds(m_children, true); }
         queue<int> getParents() const { return getIds(m_parents, false); }
@@ -232,16 +255,22 @@ namespace graphs
             auto rootNode =  getNode(nodeId);
             if (rootNode)
             {
-                // Track which nodes have been printed
-                unordered_map<int, bool> nodesToBePrinted;
-                transform(m_nodes.begin(), m_nodes.end(), std::inserter(nodesToBePrinted, nodesToBePrinted.end()), [](auto const& map_type) { return std::make_pair(map_type.first, false); } );
-                printGraph(nodesToBePrinted, rootNode->getId());
+                // Track which nodes have been printed                
+                printGraph(getNodesMarked(), rootNode->getId());
             }
             cout<<"*****************"<<endl;
         }
 
+        size_t getMaxDepth() const
+        {
+            auto nodesMarked = getNodesMarked();
+            size_t depth = 0;
+            getMaxDepth(nodesMarked, depth);            
+            return depth;
+        }
+
         // Temporal function to check if there are any invalid edges
-        int getValidEdges() const
+        int64_t getValidEdges() const
         {
             return count_if(m_edges.begin(), m_edges.end(), [](auto const& map_type) { return !map_type.second->isDetached(); });
         }
@@ -252,20 +281,33 @@ namespace graphs
         // Get amount of edges
         size_t getEdgesCount() const { return m_edges.size(); }
     private:
+        // Helper Function for GetMaxDepth
+        void getMaxDepth(unordered_map<int, bool> & nodesMarked, size_t & currentMaxDepth) const
+        {
+            auto it = find_if(nodesMarked.begin(), nodesMarked.end(), [](auto const& map_type) { return !map_type.second; });
+            if (it != nodesMarked.end())
+            {
+                auto depth = getNode(it->first)->getDepth(nodesMarked);
+                if (depth > currentMaxDepth)
+                    currentMaxDepth = depth;
+                getMaxDepth(nodesMarked, currentMaxDepth);
+            }
+        }
+
+        // Get Nodes Unmarked
+        unordered_map<int, bool> getNodesMarked() const
+        {
+            unordered_map<int, bool> nodesMarked;
+            transform(m_nodes.begin(), m_nodes.end(), std::inserter(nodesMarked, nodesMarked.end()), [](auto const& map_type) { return std::make_pair(map_type.first, false); });
+            return nodesMarked;
+        }
+
         // Print Helper
         void printGraph(unordered_map<int, bool> & nodesToBePrinted, int rootId) const // shared_ptr <Node<T>> root) const
         {
-            //cout << root->getId() <<endl;
-            //nodesToBePrinted[root->getId()] = true;
-
             queue<int> allNodes;
             allNodes.push(rootId);
-            /*auto children = root->getChildren();
-            while(!children.empty())
-            {
-                allChildren.push(children->front());
-                children->pop();
-            }*/
+
             size_t currentCount = 0;
             size_t expectedCount = allNodes.size();
             while(!allNodes.empty())
@@ -297,10 +339,11 @@ namespace graphs
                     cout<<endl;
                 }
             }
+            
             cout<<endl;
             cout<<"---- Isolated  Nodes -----"<<endl;
             // Find Node that has not been printed
-            auto it = find_if(nodesToBePrinted.begin(), nodesToBePrinted.end(), [](auto map_type) { return !map_type.second; });
+            auto it = find_if(nodesToBePrinted.begin(), nodesToBePrinted.end(), [](auto const& map_type) { return !map_type.second; });
             if (it != nodesToBePrinted.end())
             {
                 printGraph(nodesToBePrinted, it->first);

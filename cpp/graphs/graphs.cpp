@@ -30,14 +30,13 @@ TEST(GraphTest, AddingEdgeRemovingNode)
     EXPECT_TRUE(g.addEdge(1, 2, 10));
     EXPECT_EQ(2, g.getNodesCount());
     EXPECT_EQ(1, g.getEdgesCount());
-    cout << "removing node 2" << endl;
-    {
-        EXPECT_TRUE(g.removeNode(2));
-    }
+
+    // Removing Node
+    EXPECT_TRUE(g.removeNode(2));
     EXPECT_EQ(1, g.getNodesCount());
     EXPECT_EQ(0, g.getEdgesCount());
     
-    // Remove unexisting node
+    // Remove non existing node
     EXPECT_FALSE(g.removeNode(3));
 }
 
@@ -49,14 +48,13 @@ TEST(GraphTest, AddingEdgeRemovingEdge)
     EXPECT_TRUE(g.addEdge(1, 2, 10));
     EXPECT_EQ(2, g.getNodesCount());
     EXPECT_EQ(1, g.getEdgesCount());
-    cout << "removing edge " << endl;
-    {
-        EXPECT_TRUE(g.removeEdge(1, 2));
-    }
+
+    // Removing edge
+    EXPECT_TRUE(g.removeEdge(1, 2));
     EXPECT_EQ(2, g.getNodesCount());
     EXPECT_EQ(0, g.getEdgesCount());
 
-    // Remove unexisting edge
+    // Remove non existing edge
     EXPECT_FALSE(g.removeEdge(1, 2));
 }
 
@@ -72,10 +70,10 @@ TEST(GraphTest, AddingRemovingEdges_DoNotCreateNewChildrenOrParents)
 
     EXPECT_EQ(3, g.getNodesCount());
     EXPECT_EQ(3, g.getEdgesCount());
-    cout << "removing edge " << endl;
-    {
-        EXPECT_TRUE(g.removeEdge(1, 2));
-    }
+
+    // Removing edge
+    EXPECT_TRUE(g.removeEdge(1, 2));
+
     EXPECT_EQ(3, g.getNodesCount());
     EXPECT_EQ(2, g.getEdgesCount());
 
@@ -124,4 +122,23 @@ TEST(GraphTest, AddingRemovingEdges_DoNotCreateNewChildrenOrParents)
 
     EXPECT_EQ(0, g.getNode(3)->getChildrenCount());
     EXPECT_EQ(2, g.getNode(3)->getParentsCount());
+}
+
+TEST(GraphTest, PrintGraph)
+{
+    Graph<int> g;
+    for (size_t i = 1; i <= 10; ++i)
+        EXPECT_TRUE(g.addNode(i));
+    EXPECT_TRUE(g.addEdge(1, 2, 10));
+    EXPECT_TRUE(g.addEdge(1, 3, 20));
+    EXPECT_TRUE(g.addEdge(2, 3, 10));
+    EXPECT_TRUE(g.addEdge(2, 4, 10));
+    EXPECT_TRUE(g.addEdge(3, 9, 10));
+    EXPECT_TRUE(g.addEdge(4, 7, 10));
+    EXPECT_TRUE(g.addEdge(4, 5, 10));
+    EXPECT_TRUE(g.addEdge(5, 6, 10));
+    EXPECT_TRUE(g.addEdge(7, 8, 10));
+    EXPECT_TRUE(g.addEdge(2, 6, 10));
+
+    EXPECT_NO_THROW(g.print(4));
 }

@@ -1,51 +1,61 @@
+#include "gtest/gtest.h"
 #include "graph.h"
 using namespace std;
 using namespace graphs;
 
-int main()
+TEST(GraphTest, AddingNode)
 {
-    cout<<"Graphs "<<endl<<endl;
-
     Graph<int> g;
-    //Node<int> node(1,1); // this should be forbidden, since is private and only graph can create it.
-    auto nodeId1 = g.addNode(1);
-    auto nodeId2 = g.addNode(2);
-    auto nodeId3 = g.addNode(3);
-    g.addEdge(nodeId1, nodeId2, 10);
-    g.addEdge(nodeId1, nodeId3, 20);
-    auto nodeId4 = g.addNode(4);
-    g.addEdge(nodeId2, nodeId4, 10);
-    g.print(nodeId1);
+    EXPECT_TRUE(g.addNode(1));
+    EXPECT_FALSE(g.addNode(1));
+    EXPECT_EQ(1, g.getNodesCount());
+    EXPECT_EQ(0, g.getEdgesCount());
+}
+
+TEST(GraphTest, RemovingNode)
+{
+    Graph<int> g;
+    EXPECT_TRUE(g.addNode(1));
+    EXPECT_TRUE(g.removeNode(1));
+    EXPECT_FALSE(g.removeNode(2));
+    EXPECT_EQ(0, g.getNodesCount());
+    EXPECT_EQ(0, g.getEdgesCount());
+}
+
+TEST(GraphTest, AddingEdgeRemovingNode)
+{
+    Graph<int> g;
+    EXPECT_TRUE(g.addNode(1));
+    EXPECT_TRUE(g.addNode(2));
+    EXPECT_TRUE(g.addEdge(1, 2, 10));
+    EXPECT_EQ(2, g.getNodesCount());
+    EXPECT_EQ(1, g.getEdgesCount());
     cout << "removing node 2" << endl;
     {
-        g.removeNode(nodeId2);
+        EXPECT_TRUE(g.removeNode(2));
     }
-    g.print(nodeId1);
-    cout << "Adding node 2 and edge to 4 again" << endl;
-    {
-        nodeId2 = g.addNode(2);
-        g.addEdge(nodeId2, nodeId4, 10);
-    }
-    g.print(nodeId1);
-    cout << "removing node 4" << endl;
-    {
-        g.removeNode(nodeId4);
-    }
-    g.print(nodeId1);
-    cout << "Adding node 4 and edge 2 again" << endl;
-    {
-        nodeId4 = g.addNode(4);
-        g.addEdge(nodeId2, nodeId4, 10);
-    }
-    g.print(nodeId1);
+    EXPECT_EQ(1, g.getNodesCount());
+    EXPECT_EQ(0, g.getEdgesCount());
+    
+    // Remove unexisting node
+    EXPECT_FALSE(g.removeNode(3));
+}
 
-    cout << "Adding edge from 1 to 2 again" << endl;
+TEST(GraphTest, AddingEdgeRemovingEdge)
+{
+    Graph<int> g;
+    EXPECT_TRUE(g.addNode(1));
+    EXPECT_TRUE(g.addNode(2));
+    EXPECT_TRUE(g.addEdge(1, 2, 10));
+    EXPECT_EQ(2, g.getNodesCount());
+    EXPECT_EQ(1, g.getEdgesCount());
+    cout << "removing edge " << endl;
     {
-        g.addEdge(nodeId1, nodeId2, 15);
+        EXPECT_TRUE(g.removeEdge(1, 2));
     }
-    g.print(nodeId1);
+    EXPECT_EQ(2, g.getNodesCount());
+    EXPECT_EQ(0, g.getEdgesCount());
 
-    cout << "finishing program" << endl;
-        
-    return 0;
+    // Remove unexisting edge
+    EXPECT_FALSE(g.removeEdge(1, 2));
 }

@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <iterator>
 #include <iostream>
+#include <string>
 
 using namespace std;
 
@@ -77,8 +78,8 @@ namespace graphs
         friend class Graph<T>;
     };
 
-    template <class T>
-    static bool removeFromUnorderedMap(unordered_map<int, T> & map, int id)
+    template <class T, class U>
+    static bool removeFromUnorderedMap(unordered_map<U, T> & map, U id)
     {
         auto it = map.find(id);
         if (it != map.end())
@@ -92,18 +93,23 @@ namespace graphs
         }
     }
 
+    static string createEdgeId(int fromId, int toId)
+    {
+        return to_string(fromId) + string("-") + to_string(toId);
+    }
+
 
     template <class T>
     class Edge
     {
     private:
-        explicit Edge(weak_ptr<Node<T>> _from, weak_ptr<Node<T>> _to, int _id, int _weight) : from(_from), to(_to), id(_id), weight(_weight) {}
+        explicit Edge(weak_ptr<Node<T>> _from, weak_ptr<Node<T>> _to, string _id, int _weight) : from(_from), to(_to), id(_id), weight(_weight) {}
     public:
         ~Edge()
         {
             cout << "Destroying Edge" << endl;
         }
-        int getId() const { return id; }
+        string getId() const { return id; }
         const weak_ptr<Node<T>>& getFrom() const { return from; }
         const weak_ptr<Node<T>>& getTo() const { return to; }
         bool isDetached() const
@@ -113,7 +119,7 @@ namespace graphs
     private:
         weak_ptr<Node<T>> from;
         weak_ptr<Node<T>> to;
-        int id;
+        string id;
         int weight = 0;        
         friend class Graph<T>;
     };
@@ -127,12 +133,26 @@ namespace graphs
             cout << "Destroying Graph" << endl;
         }
 
-        int addNode(T data)
+        bool addNode(int id)
         {
+            if (containsNode(id))
+                return false;
+
             // We can not use make_shared, since it is not friend of Node class
-            shared_ptr<Node<T>> node (new Node<T>(++nodeIds, data));
+            shared_ptr<Node<T>> node (new Node<T>(id, id));
             nodes[node->getId()] = node;
-            return node->id;// node->getId();
+            return true;
+        }
+
+        void removeDetachedEdges()
+        {
+            // Find if there is any edge detached, so it can be reused
+            auto it = find_if(edges.begin(), edges.end(), [](auto &map_type) { return map_type.second->isDetached(); });
+            if (it != edges.end())
+            {
+                edges.erase(it);
+                removeDetachedEdges();
+            }
         }
 
         bool addEdge(int fromId, int toId, int weigth)
@@ -140,16 +160,14 @@ namespace graphs
             auto from = nodes.find(fromId);
             auto to = nodes.find(toId);
             if (from != nodes.end() && to != nodes.end())
-            {                
-                // Find if there is any edge detached, so it can be reused
-                auto nextAvailable = find_if(edges.begin(), edges.end(), [](auto &map_type) { return map_type.second->isDetached(); });
-                int edgeId;
-                if (nextAvailable != edges.end())
-                    edgeId = nextAvailable->second->getId();
-                // Incresae a new edge id
-                else
-                    edgeId = ++edgeIds;
-
+            {   
+                // Check if the edge exist
+                string edgeId = createEdgeId(fromId, toId);
+                if (edges.find(edgeId) != edges.end())
+                {
+                    cout << "edges already exist" << endl;
+                    return false;
+                }
                 // We can not use make_shared, since it is not friend of Edge class
                 shared_ptr<Edge<T>> edge(new Edge<T>(from->second, to->second, edgeId, weigth));
                 edges[edgeId] = edge;
@@ -168,18 +186,20 @@ namespace graphs
 
         bool removeNode(int id)
         {
-            return removeFromUnorderedMap(nodes, id);
+            bool res = removeFromUnorderedMap(nodes, id);
+            removeDetachedEdges();
+            return res;
         } 
 
-        bool removeEdge(int id)
+        bool removeEdge(int fromId, int toId)
         {
-            return removeFromUnorderedMap(edges, id);
+            return removeFromUnorderedMap(edges, createEdgeId(fromId, toId));
         }
 
         void print(int id)
         {
-            cout << "Nodes " << nodes.size() << endl;
-            cout << "Edges " << edges.size() << " and valid "<< getValidEdges()<<endl;
+            cout << "Nodes " << getNodesCount() << endl;
+            cout << "Edges " << getEdgesCount() << " and valid "<< getValidEdges()<<endl;
 
             auto rootNode = nodes.find(id);
             if (rootNode != nodes.end())
@@ -194,6 +214,9 @@ namespace graphs
             }
         }
 
+        size_t getNodesCount() const { return nodes.size(); }
+        size_t getEdgesCount() const { return edges.size(); }
+
     private:
         int getValidEdges() const
         {
@@ -201,10 +224,8 @@ namespace graphs
         }
                 
     private:
-        std::atomic<int> nodeIds = 0;
-        std::atomic<int> edgeIds = 0;
         unordered_map<int, shared_ptr<Node<T>>> nodes;
-        unordered_map<int, shared_ptr<Edge<T>>> edges;
+        unordered_map<string, shared_ptr<Edge<T>>> edges;
     };
 }
 

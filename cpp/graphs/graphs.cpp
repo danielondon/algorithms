@@ -139,6 +139,9 @@ TEST(GraphTest, GetMaxDepth)
     EXPECT_TRUE(g.addEdge(7, 8, 10));
     EXPECT_TRUE(g.addEdge(2, 6, 10));
 
+    EXPECT_EQ(10, g.getNodesCount());
+    EXPECT_EQ(10, g.getEdgesCount());
+
     EXPECT_EQ(5, g.getMaxDepth());
 }
 
@@ -162,4 +165,44 @@ TEST(GraphTest, UndirectedGraph)
     EXPECT_NO_THROW(g.print(1));
     EXPECT_NO_THROW(g.print(4));
     EXPECT_NO_THROW(g.print(8));
+
+    // Directed Graph, then 10 edges x 2
+    EXPECT_EQ(10, g.getNodesCount());
+    EXPECT_EQ(20, g.getEdgesCount());
+    // Remove Edge
+    EXPECT_TRUE(g.removeEdge(1, 2));
+    // Both Edges Should be removed
+    EXPECT_EQ(18, g.getEdgesCount());
+    // No edges should exist
+    EXPECT_FALSE(g.removeEdge(1, 2));
+    EXPECT_FALSE(g.removeEdge(2, 1));
+}
+
+TEST(GraphTest, PrimAlgorithm)
+{
+    Graph<int> g(false);
+    for (int i = 7; i >= 1; --i)
+        EXPECT_TRUE(g.addNode(i));
+    EXPECT_TRUE(g.addEdge(1, 2, 3));
+    EXPECT_TRUE(g.addEdge(1, 3, 3));
+    EXPECT_TRUE(g.addEdge(1, 4, 2));
+    EXPECT_TRUE(g.addEdge(2, 3, 4));
+    EXPECT_TRUE(g.addEdge(2, 5, 3));
+    EXPECT_TRUE(g.addEdge(3, 4, 5));
+    EXPECT_TRUE(g.addEdge(3, 5, 1));
+    EXPECT_TRUE(g.addEdge(3, 6, 6));
+    EXPECT_TRUE(g.addEdge(4, 6, 7));
+    EXPECT_TRUE(g.addEdge(5, 6, 8));
+    EXPECT_TRUE(g.addEdge(6, 7, 9));
+
+
+    //auto priorityQueue = g.getEdgesByPriority();
+    //while (!priorityQueue.empty()) {
+    //    cout << priorityQueue.top().second->getId() << " - " ;
+    //    priorityQueue.pop();
+    //}
+
+    auto minimumSpanningTree = prims(g);
+    EXPECT_FALSE(minimumSpanningTree.empty());
+    printMinimumSpanningTree(minimumSpanningTree);
 }

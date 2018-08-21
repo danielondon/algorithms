@@ -108,12 +108,18 @@ namespace graphs
         }
 
     public:
-        set<int> getChildren(function<bool(int)> filter = [](int){return true;}) const { return getIds(m_children, true, filter); }
-        set<int> getParents(function<bool(int)> filter = [](int){return true;}) const { return getIds(m_parents, false, filter); }
+        set<int> getChildrensIds(function<bool(int)> filter = [](int){return true;}) const { return getIds(m_children, true, filter); }
+        set<int> getParentsIds(function<bool(int)> filter = [](int){return true;}) const { return getIds(m_parents, false, filter); }
         int getId() const { return id; }
         T getData() const { return data; }
         size_t getChildrenCount() const { return m_children.size(); }
         size_t getParentsCount() const { return m_parents.size(); }
+        vector<shared_ptr<Edge<T>>> getChildren() const {
+            vector<shared_ptr<Edge<T>>> edges;
+            transform(m_children.begin(), m_children.end(), std::back_inserter(edges), [](auto const& edge) { return edge.lock(); });
+            return edges;
+
+        }
     private:
         int id;
         T data;
@@ -153,11 +159,13 @@ namespace graphs
         }
     private:
         explicit Edge(weak_ptr<Node<T>> _from, weak_ptr<Node<T>> _to, string _id, int _weight) : from(_from), to(_to), id(_id), weight(_weight) {}
-        const weak_ptr<Node<T>>& getFrom() const { return from; }
-        const weak_ptr<Node<T>>& getTo() const { return to; }
+
         bool isDetached() const { return from.expired() || to.expired(); }
     public:
+        const weak_ptr<Node<T>>& getFrom() const { return from; }
+        const weak_ptr<Node<T>>& getTo() const { return to; }
         string getId() const { return id; }
+        int getWeigth() const { return weight; }
     private:
         weak_ptr<Node<T>> from;
         weak_ptr<Node<T>> to;
@@ -167,9 +175,32 @@ namespace graphs
         friend class Node<T>;
     };
 
+    // Get hashmap to keep track of nodes marked
+    template<class T, class U>
+    unordered_map<int, U> getNodesMarked(unordered_map<int, shared_ptr<Node<T>>> const& nodes, U defaultValue)
+    {
+        unordered_map<int, U> nodesMarked;
+        transform(nodes.begin(), nodes.end(), std::inserter(nodesMarked, nodesMarked.end()), [defaultValue](auto const& map_type) { return std::make_pair(map_type.first, defaultValue); });
+        return nodesMarked;
+    }
+
+
+
+
     template<class T>
     class Graph
     {
+        //template <class T>
+        typedef pair<string, shared_ptr<Edge<T>>> PAIR_EDGE;
+
+        //template <class T>
+        struct LessThanByPairEdge
+        {
+            bool operator()(const PAIR_EDGE & lhs, const PAIR_EDGE & rhs) const
+            {
+                return lhs.second->getWeigth() < rhs.second->getWeigth();
+            }
+        };
     public:
         Graph (bool _isDirectedGraph = true) : isDirectedGraph(_isDirectedGraph)
         {}
@@ -233,7 +264,10 @@ namespace graphs
         // Remove an edge
         bool removeEdge(int fromId, int toId)
         {
-            return removeFromUnorderedMap(m_edges, createEdgeId(fromId, toId));
+            if (isDirectedGraph)
+                return removeFromUnorderedMap(m_edges, createEdgeId(fromId, toId));
+            else
+                return removeFromUnorderedMap(m_edges, createEdgeId(fromId, toId)) && removeFromUnorderedMap(m_edges, createEdgeId(toId, fromId));
         }
 
         // Get Edge
@@ -258,7 +292,7 @@ namespace graphs
             if (rootNode)
             {
                 // Track which nodes have been printed
-                auto nodesMarked = getNodesMarked();
+                auto nodesMarked = getNodesMarked(m_nodes, false);
                 printGraph(nodesMarked, rootNode->getId());
             }
             cout<<"*****************"<<endl;
@@ -266,7 +300,7 @@ namespace graphs
 
         size_t getMaxDepth() const
         {
-            auto nodesMarked = getNodesMarked();
+            auto nodesMarked = getNodesMarked(m_nodes, false);
             size_t depth = 0;
             getMaxDepth(nodesMarked, depth);            
             return depth;
@@ -276,6 +310,15 @@ namespace graphs
         int64_t getValidEdges() const
         {
             return count_if(m_edges.begin(), m_edges.end(), [](auto const& map_type) { return !map_type.second->isDetached(); });
+        }
+
+        auto getEdgesByPriority()
+        {
+            //priority_queue< shared_ptr<Edge<T>>, vector< shared_ptr<Edge<T>> >, LessThanByEdge<T>> priorityQueue;
+            //priority_queue< shared_ptr<Edge<T>> > priorityQueue;
+            priority_queue< PAIR_EDGE, vector< PAIR_EDGE >, LessThanByPairEdge > priorityQueue( m_edges.begin(), m_edges.end());
+
+            return priorityQueue;
         }
 
         // Get amount of nodes
@@ -315,14 +358,6 @@ namespace graphs
             }
         }
 
-        // Get Nodes Unmarked
-        unordered_map<int, bool> getNodesMarked() const
-        {
-            unordered_map<int, bool> nodesMarked;
-            transform(m_nodes.begin(), m_nodes.end(), std::inserter(nodesMarked, nodesMarked.end()), [](auto const& map_type) { return std::make_pair(map_type.first, false); });
-            return nodesMarked;
-        }
-
         // Print Helper
         void printGraph(unordered_map<int, bool> & nodesToBePrinted, int rootId) const // shared_ptr <Node<T>> root) const
         {
@@ -346,7 +381,7 @@ namespace graphs
 
                 // Copy all Children
                 function<bool(int)> filterFunction = [&](int id) { return nodesToBePrinted.at(id) == false; };
-                auto children = getNode(id)->getChildren(filterFunction);
+                auto children = getNode(id)->getChildrensIds(filterFunction);
                 for (const auto& child : children)
                 {
                     allNodes.push(child);
@@ -435,7 +470,75 @@ namespace graphs
         unordered_map<int, shared_ptr<Node<T>>> m_nodes;
         unordered_map<string, shared_ptr<Edge<T>>> m_edges;
         bool isDirectedGraph = true;
+        template<typename U> // Use different Template class
+        friend set<shared_ptr<Edge<U>>> prims(Graph<U> & graph);
     };
-}
 
+    template <class T>
+    struct LessThanByEdge
+    {
+        bool operator()(const shared_ptr<Edge<T>> & lhs, const shared_ptr<Edge<T>> & rhs) const
+        {
+            return lhs->getWeigth() < rhs->getWeigth();
+        }
+    };
+
+    template <class T>
+    void addToPriorityQueue(priority_queue< shared_ptr<Edge<T>>, vector<shared_ptr<Edge<T>>>, LessThanByEdge<T> > & priorityQueue,  unordered_map<int, bool> & nodesMarked, vector<shared_ptr<Edge<T>>> edges)
+    {
+        for ( auto const& edge : edges)
+        {
+            auto weakPtr = edge->getTo();
+            auto smartPtr = weakPtr.lock();
+            if (!nodesMarked[smartPtr->getId()]) {
+                priorityQueue.push(edge);
+            }
+        }
+    }
+
+
+    template <class T>
+    void prims(shared_ptr<Node<T>> node, set<shared_ptr<Edge<T>>> & minimumSpanningTree,  unordered_map<int, bool> & nodesMarked, priority_queue< shared_ptr<Edge<T>>, vector<shared_ptr<Edge<T>>>, LessThanByEdge<T> > & priorityQueue )
+    {
+        if (!nodesMarked[node->getId()]) {
+            nodesMarked[node->getId()] = true;
+            addToPriorityQueue(priorityQueue, nodesMarked, node->getChildren());
+        }
+
+        auto it = find_if(nodesMarked.begin(), nodesMarked.end(), [](auto const& map_type) { return !map_type.second; });
+        if (it == nodesMarked.end())
+            return;
+
+        if (!priorityQueue.empty()) {
+            auto edge = priorityQueue.top();
+            priorityQueue.pop();
+            minimumSpanningTree.insert(edge);
+            prims(edge->getTo().lock(), minimumSpanningTree, nodesMarked, priorityQueue);
+        }
+    }
+
+
+    template <class T>
+    set<shared_ptr<Edge<T>>> prims(Graph<T> & graph)
+    {
+        set<shared_ptr<Edge<T>>> minimumSpanningTree;
+        if(graph.getEdgesCount() > 0)
+        {
+            auto nodesMarked = getNodesMarked(graph.m_nodes, false);
+            priority_queue< shared_ptr<Edge<T>>, vector<shared_ptr<Edge<T>>>, LessThanByEdge<T> > priorityQueue;
+            prims(graph.m_nodes.begin()->second, minimumSpanningTree, nodesMarked, priorityQueue);
+        }
+        return minimumSpanningTree;
+    }
+
+    template <class T>
+    void printMinimumSpanningTree(set<shared_ptr<Edge<T>>> const& minimumSpanningTree)
+    {
+        for (auto const& edge : minimumSpanningTree)
+        {
+            cout<<edge->getId()<< " ";
+        }
+        cout<<endl;
+    }
+}
 #endif

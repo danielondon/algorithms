@@ -12,6 +12,7 @@
 #include <iterator>
 #include <iostream>
 #include <string>
+#include <functional>
 
 using namespace std;
 
@@ -29,13 +30,13 @@ namespace graphs
     public:
         ~Node()
         {
-            cout << "Destroying Node " << data << endl;
+            //cout << "Destroying Node " << data << endl;
         }
     private:
         // Avoid that a node can be constructed from the outside
         explicit Node(int _id, int _data) : id(_id), data(_data)
         {
-            cout << "Creating Node " << data << endl;
+            //cout << "Creating Node " << data << endl;
         }
 
         // It was not moved to a free function, because the method isDetached is private and then can not be accessed from the free function.
@@ -63,9 +64,9 @@ namespace graphs
             addOrReplace(m_parents, from);
         }
 
-        queue<int> getIds(vector<weak_ptr<Edge<T>>> const& edges, bool isTo) const
+        set<int> getIds(vector<weak_ptr<Edge<T>>> const& edges, bool isTo, function<bool(int)> filter ) const
         {
-            queue<int> ids;
+            set<int> ids;
             for (auto const& edge_wptr : edges)
             {
                 auto edge_sptr = edge_wptr.lock();
@@ -76,7 +77,8 @@ namespace graphs
                         node_sptr = edge_sptr->getTo().lock();
                     else
                         node_sptr = edge_sptr->getFrom().lock();
-                    ids.push(node_sptr->getId());
+                    if (filter(node_sptr->getId()))
+                        ids.insert(node_sptr->getId());
                 }
             }
             return ids;
@@ -106,8 +108,8 @@ namespace graphs
         }
 
     public:
-        queue<int> getChildren() const { return getIds(m_children, true); }
-        queue<int> getParents() const { return getIds(m_parents, false); }
+        set<int> getChildren(function<bool(int)> filter = [](int){return true;}) const { return getIds(m_children, true, filter); }
+        set<int> getParents(function<bool(int)> filter = [](int){return true;}) const { return getIds(m_parents, false, filter); }
         int getId() const { return id; }
         T getData() const { return data; }
         size_t getChildrenCount() const { return m_children.size(); }
@@ -147,7 +149,7 @@ namespace graphs
     public:
         ~Edge()
         {
-            cout << "Destroying Edge" << endl;
+            //cout << "Destroying Edge" << endl;
         }
     private:
         explicit Edge(weak_ptr<Node<T>> _from, weak_ptr<Node<T>> _to, string _id, int _weight) : from(_from), to(_to), id(_id), weight(_weight) {}
@@ -169,9 +171,12 @@ namespace graphs
     class Graph
     {
     public:
+        Graph (bool _isDirectedGraph = true) : isDirectedGraph(_isDirectedGraph)
+        {}
+
         ~Graph()
         {
-            cout << "Destroying Graph" << endl;
+            //cout << "Destroying Graph" << endl;
         }
 
         // Add a node
@@ -209,22 +214,19 @@ namespace graphs
             auto from = m_nodes.find(fromId);
             auto to = m_nodes.find(toId);
             if (from != m_nodes.end() && to != m_nodes.end())
-            {   
-                // Check if the edge exist
-                auto edgeId = createEdgeId(fromId, toId);
-                if (m_edges.find(edgeId) != m_edges.end())
-                {
-                    cout << "edges already exist" << endl;
+            {
+                if(!addEdge(from->second, to->second,  weigth))
                     return false;
+
+                // If is not directed graph, then add extra edge
+                if (!isDirectedGraph)
+                {
+                    if(!addEdge(to->second, from->second,  weigth))
+                        return false;
                 }
-                // We can not use make_shared, since it is not friend of Edge class
-                shared_ptr<Edge<T>> edge(new Edge<T>(from->second, to->second, edgeId, weigth));
-                m_edges[edgeId] = edge;
-                from->second->addChild(edge);
-                to->second->addParent(edge);
                 return true;
             }
-            cout << "Edge was not added. Some of the nodes do not exist" << endl;
+            //cout << "Edge was not added. Some of the nodes do not exist" << endl;
             return false;
         }
 
@@ -255,8 +257,9 @@ namespace graphs
             auto rootNode =  getNode(nodeId);
             if (rootNode)
             {
-                // Track which nodes have been printed                
-                printGraph(getNodesMarked(), rootNode->getId());
+                // Track which nodes have been printed
+                auto nodesMarked = getNodesMarked();
+                printGraph(nodesMarked, rootNode->getId());
             }
             cout<<"*****************"<<endl;
         }
@@ -281,6 +284,24 @@ namespace graphs
         // Get amount of edges
         size_t getEdgesCount() const { return m_edges.size(); }
     private:
+        // Helper function for adding edge
+        bool addEdge(shared_ptr<Node<T>> from, shared_ptr<Node<T>> to, int weight)
+        {
+            // Check if the edge exist
+            auto edgeId = createEdgeId(from->getId(), to->getId());
+            if (m_edges.find(edgeId) != m_edges.end())
+            {
+                //cout << "edges already exist" << endl;
+                return false;
+            }
+            // We can not use make_shared, since it is not friend of Edge class
+            shared_ptr<Edge<T>> edge(new Edge<T>(from, to, edgeId, weight));
+            m_edges[edgeId] = edge;
+            from->addChild(edge);
+            to->addParent(edge);
+            return true;
+        }
+
         // Helper Function for GetMaxDepth
         void getMaxDepth(unordered_map<int, bool> & nodesMarked, size_t & currentMaxDepth) const
         {
@@ -324,11 +345,11 @@ namespace graphs
                 ++currentCount;
 
                 // Copy all Children
-                auto children = getNode(id)->getChildren();
-                while(!children.empty())
+                function<bool(int)> filterFunction = [&](int id) { return nodesToBePrinted.at(id) == false; };
+                auto children = getNode(id)->getChildren(filterFunction);
+                for (const auto& child : children)
                 {
-                    allNodes.push(children.front());
-                    children.pop();
+                    allNodes.push(child);
                 }
 
                 // Reset Count
@@ -413,6 +434,7 @@ namespace graphs
     private:
         unordered_map<int, shared_ptr<Node<T>>> m_nodes;
         unordered_map<string, shared_ptr<Edge<T>>> m_edges;
+        bool isDirectedGraph = true;
     };
 }
 

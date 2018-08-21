@@ -123,7 +123,7 @@ TEST(GraphTest, AddingRemovingEdges_DoNotCreateNewChildrenOrParents)
     EXPECT_EQ(2, g.getNode(3)->getParentsCount());
 }
 
-TEST(GraphTest, PrintGraph)
+TEST(GraphTest, GetMaxDepth)
 {
     Graph<int> g;
     for (int i = 10; i >= 1; --i)
@@ -139,6 +139,27 @@ TEST(GraphTest, PrintGraph)
     EXPECT_TRUE(g.addEdge(7, 8, 10));
     EXPECT_TRUE(g.addEdge(2, 6, 10));
 
-    EXPECT_NO_THROW(g.print(1));
     EXPECT_EQ(5, g.getMaxDepth());
+}
+
+
+TEST(GraphTest, UndirectedGraph)
+{
+    Graph<int> g(false);
+    for (int i = 10; i >= 1; --i)
+        EXPECT_TRUE(g.addNode(i));
+    EXPECT_TRUE(g.addEdge(1, 2, 10));
+    EXPECT_TRUE(g.addEdge(1, 3, 20));
+    EXPECT_TRUE(g.addEdge(2, 3, 10));
+    EXPECT_TRUE(g.addEdge(2, 4, 10));
+    EXPECT_TRUE(g.addEdge(3, 9, 10));
+    EXPECT_TRUE(g.addEdge(4, 7, 10));
+    EXPECT_TRUE(g.addEdge(4, 5, 10));
+    EXPECT_TRUE(g.addEdge(5, 6, 10));
+    EXPECT_TRUE(g.addEdge(7, 8, 10));
+    EXPECT_TRUE(g.addEdge(2, 6, 10));
+
+    EXPECT_NO_THROW(g.print(1));
+    EXPECT_NO_THROW(g.print(4));
+    EXPECT_NO_THROW(g.print(8));
 }

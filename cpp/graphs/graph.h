@@ -441,7 +441,9 @@ namespace graphs
         unordered_map<string, shared_ptr<Edge<T>>> m_edges;
         bool isDirectedGraph = true;
         template<typename U> // Use different Template class
-        friend set<shared_ptr<Edge<U>>> prims(Graph<U> & graph);
+        friend set<shared_ptr<Edge<U>>> prims(Graph<U> const& graph);
+        template<typename U>
+        friend set<shared_ptr<Edge<U>>> dijkstra(Graph<U> const& graph, int fromId, int toId);
     };
 
     // Get hashmap to keep track of nodes marked
@@ -502,9 +504,8 @@ namespace graphs
         }
     }
 
-
     template <class T>
-    set<shared_ptr<Edge<T>>> prims(Graph<T> & graph)
+    set<shared_ptr<Edge<T>>> prims(Graph<T> const& graph)
     {
         set<shared_ptr<Edge<T>>> minimumSpanningTree;
         if(graph.getEdgesCount() > 0)
@@ -526,15 +527,30 @@ namespace graphs
     template <class T>
     int getCostPath(set<shared_ptr<Edge<T>>> const& path)
     {
-        /*
-        int cost = 0;
-        for(auto const& edge : path)
-        {
-            cost += edge->getWeigth();
-        }
-        return cost;
-        */
         return std::accumulate(path.begin(), path.end(), 0, [](int accumulator, auto const& edge) { return edge->getWeigth() + accumulator; });
+    }
+
+
+    struct sNodeVisitedAndCost
+    {
+        int cost = INT32_MAX;
+        bool visited = false;
+    };
+
+    template <class T>
+    void dijkstra(unordered_map<int, sNodeVisitedAndCost> & nodesMarked, set<shared_ptr<Edge<T>>> & path)
+    {
+
+    }
+
+    template <class T>
+    set<shared_ptr<Edge<T>>> dijkstra(Graph<T> const& graph, int fromId, int toId)
+    {
+        set<shared_ptr<Edge<T>>> path;
+        if (graph.m_nodes.find(fromId) != graph.m_nodes.end() && graph.m_nodes.find(toId) != graph.m_nodes.end()) {
+            auto nodesMarked = getNodesMarked(graph.m_nodes, sNodeVisitedAndCost());
+            dijkstra(nodesMarked, path);
+        }return path;
     }
 }
 #endif

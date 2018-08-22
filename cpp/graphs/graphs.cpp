@@ -197,3 +197,28 @@ TEST(GraphTest, PrimsAlgorithm)
     EXPECT_EQ( 21, getCostPath(minimumSpanningTree));
     EXPECT_NO_THROW(printPath(minimumSpanningTree));
 }
+
+TEST(GraphTest, DijkstraAlgorithm)
+{
+    // https://www.youtube.com/watch?v=gdmfOwyQlcI
+    Graph<int> g(false);
+    for (int i = 7; i >= 1; --i)
+        EXPECT_TRUE(g.addNode(i));
+    EXPECT_TRUE(g.addEdge(1, 2, 4));
+    EXPECT_TRUE(g.addEdge(1, 3, 3));
+    EXPECT_TRUE(g.addEdge(1, 5, 7));
+    EXPECT_TRUE(g.addEdge(2, 3, 6));
+    EXPECT_TRUE(g.addEdge(2, 4, 5));
+    EXPECT_TRUE(g.addEdge(3, 4, 11));
+    EXPECT_TRUE(g.addEdge(3, 5, 8));
+    EXPECT_TRUE(g.addEdge(4, 5, 2));
+    EXPECT_TRUE(g.addEdge(4, 6, 2));
+    EXPECT_TRUE(g.addEdge(4, 7, 10));
+    EXPECT_TRUE(g.addEdge(5, 7, 5));
+    EXPECT_TRUE(g.addEdge(6, 7, 3));
+
+    auto path = dijkstra(g, 1, 6);
+    EXPECT_EQ(11, getCostPath(path));
+    EXPECT_EQ(3, path.size());
+    EXPECT_NO_THROW(printPath(path));
+}

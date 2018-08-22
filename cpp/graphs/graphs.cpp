@@ -178,31 +178,22 @@ TEST(GraphTest, UndirectedGraph)
     EXPECT_FALSE(g.removeEdge(2, 1));
 }
 
-TEST(GraphTest, PrimAlgorithm)
+TEST(GraphTest, PrimsAlgorithm)
 {
     Graph<int> g(false);
-    for (int i = 7; i >= 1; --i)
+    for (int i = 6; i >= 1; --i)
         EXPECT_TRUE(g.addNode(i));
-    EXPECT_TRUE(g.addEdge(1, 2, 3));
-    EXPECT_TRUE(g.addEdge(1, 3, 3));
-    EXPECT_TRUE(g.addEdge(1, 4, 2));
-    EXPECT_TRUE(g.addEdge(2, 3, 4));
-    EXPECT_TRUE(g.addEdge(2, 5, 3));
-    EXPECT_TRUE(g.addEdge(3, 4, 5));
-    EXPECT_TRUE(g.addEdge(3, 5, 1));
-    EXPECT_TRUE(g.addEdge(3, 6, 6));
-    EXPECT_TRUE(g.addEdge(4, 6, 7));
-    EXPECT_TRUE(g.addEdge(5, 6, 8));
-    EXPECT_TRUE(g.addEdge(6, 7, 9));
-
-
-    //auto priorityQueue = g.getEdgesByPriority();
-    //while (!priorityQueue.empty()) {
-    //    cout << priorityQueue.top().second->getId() << " - " ;
-    //    priorityQueue.pop();
-    //}
+    EXPECT_TRUE(g.addEdge(1, 2, 4));
+    EXPECT_TRUE(g.addEdge(1, 6, 2));
+    EXPECT_TRUE(g.addEdge(2, 3, 6));
+    EXPECT_TRUE(g.addEdge(2, 6, 3));
+    EXPECT_TRUE(g.addEdge(3, 4, 3));
+    EXPECT_TRUE(g.addEdge(3, 6, 1));
+    EXPECT_TRUE(g.addEdge(4, 5, 12));
+    EXPECT_TRUE(g.addEdge(5, 6, 14));
 
     auto minimumSpanningTree = prims(g);
-    EXPECT_FALSE(minimumSpanningTree.empty());
-    printMinimumSpanningTree(minimumSpanningTree);
+    EXPECT_EQ(g.getNodesCount() - 1, minimumSpanningTree.size());
+    EXPECT_EQ( 21, getCostPath(minimumSpanningTree));
+    EXPECT_NO_THROW(printPath(minimumSpanningTree));
 }

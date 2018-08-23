@@ -25,6 +25,22 @@ namespace graphs
         return to_string(fromId) + string("-") + to_string(toId);
     }
 
+    template<typename _InputIterator, typename _OutputIterator,
+            typename _UnaryOperation, typename _OptionalOperation>
+    void transform_if(_InputIterator __first, _InputIterator __last,
+                      _OutputIterator __result, _UnaryOperation __unary_op, _OptionalOperation __optional_op)
+    {
+        while (__first != __last)
+        {
+            if(__optional_op(*__first))
+            {
+                *__result = __unary_op(*__first);
+                ++__result;
+            }
+            ++__first;
+        }
+    }
+
     // Forward Declarations
     template <class T>
     class Edge;
@@ -115,7 +131,6 @@ namespace graphs
 
             return maxDepth;
         }
-
     public:
         int getId() const { return id; }
         T getData() const { return data; }
@@ -123,12 +138,21 @@ namespace graphs
         size_t getParentsCount() const { return m_parents.size(); }
 
         vector<shared_ptr<Node<T>>> getChildrenNodes(function<bool(int)> filter = [](int){return true;}) const { return getNodes(m_children, true, filter); }
-        vector<shared_ptr<Edge<T>>> getChildrenEdges() const {
+        vector<shared_ptr<Edge<T>>> getChildrenEdges(function<bool(shared_ptr<Edge<T>>)> filter = [](shared_ptr<Edge<T>>){return true;}) const {
             vector<shared_ptr<Edge<T>>> edges;
-            transform(m_children.begin(), m_children.end(), std::back_inserter(edges), [](auto const& edge) { return edge.lock(); });
-            return edges;
+            //transform(m_children.begin(), m_children.end(), std::back_inserter(edges), [](auto const& edge) { return edge.lock(); });
+            transform_if(m_children.begin(), m_children.end(), std::back_inserter(edges), [](auto const& edge) { return edge.lock(); },
+                    [&filter](const auto& edgePtr)
+                    {
+                        auto edge = edgePtr.lock();
+                        if (edge)
+                            return filter(edge);
+                        return false;
+                    });
 
+            return edges;
         }
+
     private:
         int id;
         T data;
@@ -443,7 +467,7 @@ namespace graphs
         template<typename U> // Use different Template class
         friend set<shared_ptr<Edge<U>>> prims(Graph<U> const& graph);
         template<typename U>
-        friend set<shared_ptr<Edge<U>>> dijkstra(Graph<U> const& graph, int fromId, int toId);
+        friend vector<shared_ptr<Edge<U>>> dijkstra(Graph<U> const& graph, int fromId, int toId);
     };
 
     // Get hashmap to keep track of nodes marked
@@ -468,27 +492,15 @@ namespace graphs
     using priority_queue_for_edges = priority_queue< shared_ptr<Edge<T>>, vector<shared_ptr<Edge<T>>>, LessThanByEdge<T> >;
 
     template <class T>
-    void addToPriorityQueueEdgesWithNodesNotMarked(priority_queue_for_edges<T> & priorityQueue,
-                                                   unordered_map<int, bool> const& nodesMarked,
-                                                   vector<shared_ptr<Edge<T>>> const&& edges)
-    {
-        for ( auto const& edge : edges)
-        {
-            if (!nodesMarked.at(edge->getTo()->getId())) {
-                priorityQueue.push(edge);
-            }
-        }
-    }
-
-
-    template <class T>
     void prims(shared_ptr<Node<T>> node, set<shared_ptr<Edge<T>>> & minimumSpanningTree,  unordered_map<int, bool> & nodesMarked, priority_queue_for_edges<T> & priorityQueue )
     {
         // Mark Node
         nodesMarked[node->getId()] = true;
 
-        // Add children edges to the priority queue. Only those that are not marked yet
-        addToPriorityQueueEdgesWithNodesNotMarked(priorityQueue, nodesMarked, node->getChildrenEdges());
+        // Select edges which the destination Node is not marked yet
+        auto edges = node->getChildrenEdges([&nodesMarked](const auto& edge){ return !nodesMarked.at(edge->getTo()->getId());} );
+        // Add children edges to the priority queue.
+        for_each(edges.begin(), edges.end(), [&priorityQueue](const auto& edge) { priorityQueue.push(edge); });
 
         // If priority queue is empty, then algorithm has finished
         while (!priorityQueue.empty())
@@ -517,15 +529,15 @@ namespace graphs
         return minimumSpanningTree;
     }
 
-    template <class T>
-    void printPath(set<shared_ptr<Edge<T>>> const& minimumSpanningTree)
+    template <template <typename> class Container, class T>
+    void printPath(Container<shared_ptr<Edge<T>>> const& minimumSpanningTree)
     {
         for_each(minimumSpanningTree.begin(), minimumSpanningTree.end(), [](auto const& edge) { cout<<edge->getId()<< " "; } );
         cout<<endl;
     }
 
-    template <class T>
-    int getCostPath(set<shared_ptr<Edge<T>>> const& path)
+    template <template <typename> class Container, class T>
+    int getCostPath(Container<shared_ptr<Edge<T>>> const& path)
     {
         return std::accumulate(path.begin(), path.end(), 0, [](int accumulator, auto const& edge) { return edge->getWeigth() + accumulator; });
     }
@@ -538,19 +550,63 @@ namespace graphs
     };
 
     template <class T>
-    void dijkstra(unordered_map<int, sNodeVisitedAndCost> & nodesMarked, set<shared_ptr<Edge<T>>> & path)
+    //void dijkstra(unordered_map<int, sNodeVisitedAndCost> & nodesMarked, set<shared_ptr<Edge<T>>> & path, const shared_ptr <Node<T>>  fromNode, const shared_ptr <Node<T>> toNode, Graph<T> const& graph)
+    void dijkstra(unordered_map<int, sNodeVisitedAndCost> & nodesMarked, vector<shared_ptr<Edge<T>>> & path, const shared_ptr <Node<T>>  fromNode, const shared_ptr <Node<T>> toNode, Graph<T> const& graph)
     {
+        // Select edges which destination nodes have not been visited yet.
+        auto childrenEdges = fromNode->getChildrenEdges([&nodesMarked](const auto& edge){ return !nodesMarked.at(edge->getTo()->getId()).visited;  });
 
+        for(auto const& edge : childrenEdges)
+        {
+            auto node = edge->getTo();
+            // Update cost for those which the cost is less than the current cost
+            if((nodesMarked[fromNode->getId()].cost + edge->getWeigth()) < nodesMarked[node->getId()].cost)
+            {
+                nodesMarked[node->getId()].cost = nodesMarked[fromNode->getId()].cost + edge->getWeigth();
+                path.push_back(edge);
+            }
+
+            // Return now that the node was founded
+            if (node->getId() == toNode->getId())
+                return;
+        }
+
+        // Check node as Visited
+        nodesMarked[fromNode->getId()].visited = true;
+
+        // Get nodes that have not been visited
+        unordered_map<int, sNodeVisitedAndCost> nodesMarkedFiltered;
+        copy_if(nodesMarked.begin(), nodesMarked.end(), std::inserter(nodesMarkedFiltered, nodesMarkedFiltered.end()), [](const auto& item){return !item.second.visited;});
+        if(!nodesMarked.empty())
+        {
+            auto pair = min_element(nodesMarkedFiltered.begin(), nodesMarkedFiltered.end(), [](const auto& lhs, const auto& rhs ) { return lhs.second.cost < rhs.second.cost; });
+            auto nodeWithMinimumCost = graph.getNode(pair->first);
+            dijkstra(nodesMarked, path, nodeWithMinimumCost, toNode, graph );
+        }
     }
 
     template <class T>
-    set<shared_ptr<Edge<T>>> dijkstra(Graph<T> const& graph, int fromId, int toId)
+    vector<shared_ptr<Edge<T>>> dijkstra(Graph<T> const& graph, int fromId, int toId)
     {
-        set<shared_ptr<Edge<T>>> path;
+        vector<shared_ptr<Edge<T>>> path;
+        vector<shared_ptr<Edge<T>>> returnedPath;
         if (graph.m_nodes.find(fromId) != graph.m_nodes.end() && graph.m_nodes.find(toId) != graph.m_nodes.end()) {
             auto nodesMarked = getNodesMarked(graph.m_nodes, sNodeVisitedAndCost());
-            dijkstra(nodesMarked, path);
-        }return path;
+            auto fromNode = graph.getNode(fromId);
+            auto toNode = graph.getNode(toId);
+            nodesMarked[fromNode->getId()].cost = 0;
+            dijkstra(nodesMarked, path, fromNode, toNode, graph);
+
+            returnedPath.push_back(path.back());
+            auto it = path.rbegin() + 1;
+            for(; it != path.rend(); ++it)
+            {
+                if (returnedPath.back()->getFrom()->getId() == (*it)->getTo()->getId())
+                    returnedPath.push_back(*it);
+            }
+
+        }
+        return returnedPath;
     }
 }
 #endif

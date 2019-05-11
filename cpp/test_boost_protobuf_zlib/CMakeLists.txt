@@ -9,10 +9,10 @@ protobuf_generate_cpp(protobuff_srcs protobuff_hdrs
 SET(TARGET test_boost_protobuf_zlib)
 ADD_EXECUTABLE (${TARGET} ${TARGET}.cpp ${protobuff_srcs} ${protobuff_hdrs})
 
-#if(Protobuf_FOUND)
-#  include_directories(${PROTOBUF_INCLUDE_DIR})
-#  target_link_libraries(${TARGET} ${PROTOBUF_LIBRARY})
-#endif()
+if(Protobuf_FOUND)
+  include_directories(${PROTOBUF_INCLUDE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
+  target_link_libraries(${TARGET} ${PROTOBUF_LIBRARY})
+endif()
 
 if ( ZLIB_FOUND )
     include_directories( ${ZLIB_INCLUDE_DIRS} )

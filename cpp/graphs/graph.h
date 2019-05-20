@@ -255,8 +255,9 @@ namespace graphs
             auto rootNode =  getNode(nodeId);
             if (rootNode)
             {
-                // Track which nodes have been printed                
-                printGraph(getNodesMarked(), rootNode->getId());
+                // Track which nodes have been printed
+                auto graph = getNodesMarked();
+                printGraph(graph, rootNode->getId());
             }
             cout<<"*****************"<<endl;
         }

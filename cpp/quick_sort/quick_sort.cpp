@@ -11,19 +11,29 @@ bool debug = true;
 
 int partition(vector<int> & myArray, int start, int end)
 {
-    //int pivotIndex = end - 1;
-    int pivot = myArray[end - 1];
-    int pivotIndex = start;        // place for swapping
-    for (int j = start; j < end - 1; ++j)
+    int pivotIndex = end - 1;    
+    for (int j = start; j <= pivotIndex;) 
     {
-        if ( myArray[j] < pivot)
+        if ( myArray[j] >  myArray[pivotIndex])
         {
-            swap(myArray[pivotIndex], myArray[j]);
-            pivotIndex = pivotIndex + 1;
+            swap(myArray[pivotIndex], myArray[pivotIndex - 1]);
+            if ( pivotIndex - j > 1)
+                swap(myArray[pivotIndex], myArray[j]);
+            --pivotIndex;
+        }
+        else
+        {
+            ++j;
+        }
+        
+        if (debug)
+        {
+            cout<<"j "<< j<< " pivotIndex "<< pivotIndex<< endl;
+            printVector(myArray);
         }
     }
     
-    swap(myArray[pivotIndex], myArray[end-1]);
+    //swap(myArray[pivotIndex], myArray[end-1]);
     
     if (debug)
     {
@@ -63,7 +73,7 @@ int main()
     cout<<"Quick Sort "<<endl<<endl;
     
     {
-        vector<int> myArray = { 2, 1, -9, -7, -8, 2, -8, 2, 3, -8 };
+        vector<int> myArray = { 2, 1, -9, -7, 0, 5, 1, -8, -20, 2, -8, 2, 3, -8 };
         
         cout<<"Vector is: ";
         printVector(myArray);

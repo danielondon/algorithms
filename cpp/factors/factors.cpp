@@ -2,6 +2,7 @@
 #include <vector>
 #include <iterator> // for ostream_iterator
 #include <algorithm>
+#include <cmath>
 
 using namespace std;
 

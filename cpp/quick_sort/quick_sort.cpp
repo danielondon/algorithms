@@ -7,17 +7,17 @@
 
 #include "common.h"
 using namespace std;
-bool debug = true;
+bool debug = false;
 
 int partition(vector<int> & myArray, int start, int end)
 {
     int pivotIndex = end - 1;    
-    for (int j = start; j <= pivotIndex;) 
+    for (int j = start; j < pivotIndex;)
     {
         if ( myArray[j] >  myArray[pivotIndex])
         {
             swap(myArray[pivotIndex], myArray[pivotIndex - 1]);
-            if ( pivotIndex - j > 1)
+            if ( j != (pivotIndex - 1)) // avoid swapping again
                 swap(myArray[pivotIndex], myArray[j]);
             --pivotIndex;
         }
@@ -32,9 +32,7 @@ int partition(vector<int> & myArray, int start, int end)
             printVector(myArray);
         }
     }
-    
-    //swap(myArray[pivotIndex], myArray[end-1]);
-    
+
     if (debug)
     {
         cout<<"Start index is "<<start<<endl;

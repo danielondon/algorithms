@@ -1,15 +1,7 @@
-#include <iostream>
-#include <vector>
-#include <string>
-#include <sstream>
-#include <iterator> // for ostream_iterator
-#include <algorithm>
-#include <stack>
-#include <cmath>
-#include <climits>
-#include <map>
-
+#include "common.h"
 using namespace std;
+
+bool debug = false;
 
 // Get MAx sum of a contiguous subarray
 
@@ -21,14 +13,6 @@ using namespace std;
 //-2  5   6  12 10 -1  = [5 6 12 10]
 // 5 -1  -1 -2  5
 
-void printVector(const vector<int> & numbers)
-{
-    //for (int i : numbers)
-    //    cout << i << " ";
-    //std::copy(numbers.begin(), numbers.end(), std::ostream_iterator<int>(std::cout, " "));
-    std::for_each(numbers.cbegin(), numbers.cend(), [] (const int c) {std::cout << c << " ";} );
-    cout<<endl;
-}
 
 int maxSubArray(const std::vector<int> & A)
 {
@@ -48,8 +32,7 @@ int maxSubArray(const std::vector<int> & A)
     	auto it = currentSumPerIndex.begin();
         auto endIter = currentSumPerIndex.end();
 
-        // Update Other Hypothesi
-    	//for(auto & it : currentSumPerIndex)
+        // Update Other Hypothesis
     	for(; it != endIter;)
     	{
     	    bool toDelete = false;
@@ -72,9 +55,41 @@ int maxSubArray(const std::vector<int> & A)
         	else
         	    ++it;
         }
-        cout<<"Size Map "<< currentSumPerIndex.size()<<endl;
+        if (debug)
+            cout<<"Size Map "<< currentSumPerIndex.size()<<endl;
     }
     
+    return maxSum;
+}
+
+int maxSubArray2(const std::vector<int> & myArray)
+{
+    auto currentSum = myArray.front();
+    auto maxSum = currentSum;
+    auto possibleMaxSum = maxSum;
+    for (size_t i = 1; i < myArray.size(); ++i)
+    {
+        auto currentValue = myArray[i];
+        if (currentSum < 0)
+        {
+            currentSum = currentValue;
+            possibleMaxSum = currentSum;
+        }
+        else
+        {
+            currentSum += currentValue;
+
+            if (currentSum > 0)
+            {
+                // preserve hypothesis
+                possibleMaxSum = currentSum;
+            }
+
+        }
+
+        maxSum = max(maxSum, currentSum);
+    }
+
     return maxSum;
 }
 
@@ -93,13 +108,14 @@ int main()
     testNumbers.push_back({5,-1,-1,-2,5}); // 6
     testNumbers.push_back({-2,1,-3,4,-1,2,1,-5,4}); //6
     testNumbers.push_back({-2,-1,-3,-4,-1,-2,-1,-5,-4}); //-1
-    
+    testNumbers.push_back({10,-1, 4, -1, 1, -1, 4});
+
+
     for (auto const & listNumbers : testNumbers)
     {
-        cout<< "Original Array: ";
-        printVector(listNumbers);   
-        int maxSum = maxSubArray(listNumbers);
-        cout<< "Max sum is: "<<maxSum<<endl<<endl;
+        printVector(listNumbers);
+        cout<< "Max sum is: "<<maxSubArray(listNumbers)<<endl;
+        cout<< "Max sum is: "<<maxSubArray2(listNumbers)<<endl;
     }
     return 0;
 }

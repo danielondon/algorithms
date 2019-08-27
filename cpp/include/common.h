@@ -1,4 +1,4 @@
-
+#include <sstream>
 #include <iostream>
 #include <vector>
 #include <iterator> // for ostream_iterator
@@ -6,6 +6,7 @@
 #include <memory>
 #include <map>
 #include <queue>
+#include <climits>
 
 using namespace std;
 

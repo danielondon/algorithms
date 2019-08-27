@@ -1,0 +1,2 @@
+SET(TARGET max_nth_array)
+ADD_EXECUTABLE (${TARGET} ${TARGET}.cpp)

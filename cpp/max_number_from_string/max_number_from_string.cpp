@@ -56,13 +56,14 @@ string getMaxNumber(std::vector<int> numbers)
 // res = "8595"
 int main() 
 {
-    //int numbersArray[] = {59, 5, 8};
-    int numbersArray[] = {90, 9, 8};
+    vector<vector<int>> numbersArrayAll = {{90, 9, 8}, {59, 5, 8}};
 
-	cout << "Numbers Array is " << endl;
-	printCollection(numbersArray);
-    vector<int> numbers(numbersArray, numbersArray + sizeof(numbersArray) / sizeof(int) );
-    string res = getMaxNumber(numbers);
-    cout<<"Max Number possible is "<<res<<endl;
+    for (auto & numbersArray : numbersArrayAll)
+    {
+        cout << "Numbers Array is " << endl;
+        printCollection(numbersArray);;
+        string res = getMaxNumber(numbersArray);
+        cout<<"Max Number possible is "<<res<<endl;
+    }
     return 0;
 }

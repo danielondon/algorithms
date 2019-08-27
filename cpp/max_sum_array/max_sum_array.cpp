@@ -78,16 +78,20 @@ int maxSubArray2(const std::vector<int> & myArray)
         else
         {
             currentSum += currentValue;
-
-            if (currentSum > 0)
-            {
-                // preserve hypothesis
-                possibleMaxSum = currentSum;
-            }
-
+            possibleMaxSum += currentValue;
         }
 
-        maxSum = max(maxSum, currentSum);
+        maxSum = max(max(maxSum, currentSum), possibleMaxSum);
+
+        if (currentValue < 0)
+        {
+            if (possibleMaxSum < 0)
+            {
+                // preserve hypothesis
+                possibleMaxSum =  min(0, maxSum);
+            }
+            currentSum = min(0, maxSum);
+        }
     }
 
     return maxSum;

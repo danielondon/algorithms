@@ -16,6 +16,12 @@ void printVector(const vector<int> & numbers)
     cout<<endl;
 }
 
+void printMatrix(const vector<vector<int>> & matrix)
+{
+    std::for_each(matrix.cbegin(), matrix.cend(), [] (const auto& v) { printVector(v); } );
+    cout<<endl;
+}
+
 struct Node
 {
     //int value;

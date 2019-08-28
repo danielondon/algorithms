@@ -3,67 +3,13 @@ using namespace std;
 
 bool debug = false;
 
-typedef vector<vector<Color>> Matrix;
 struct ColorResult
 {
     Color color = Color::Invalid;
     int amountCells = 0;
 };
 
-struct Coordinates
-{
-    size_t i;
-    size_t j;
-    string toString() const { return std::to_string(i) + "-" + std::to_string(j); }
-    bool operator==(const Coordinates& other) const
-    {
-        return i == other.i && j == other.j;
-    }
-
-};
-
-namespace std {
-    template <>
-    struct hash<Coordinates>
-    {
-        size_t operator()(const Coordinates & x) const
-        {
-            std::hash<std::string> h;
-            return h(x.toString());
-        }
-    };
-}
-
-bool inBounds (Coordinates coordinates, const Matrix matrix)
-{
-    if (coordinates.i >= 0 && coordinates.i < matrix.size()
-            && !matrix.empty()
-            && coordinates.j >= 0 && coordinates.j < matrix.front().size())
-        return true;
-    return false;
-}
-
-Coordinates goUp(Coordinates coordinates)
-{
-    return { coordinates.i - 1, coordinates.j };
-}
-
-Coordinates goDown(Coordinates coordinates)
-{
-    return { coordinates.i + 1, coordinates.j };
-}
-
-Coordinates goLeft(Coordinates coordinates)
-{
-    return { coordinates.i, coordinates.j - 1};
-}
-
-Coordinates goRight(Coordinates coordinates)
-{
-    return { coordinates.i, coordinates.j + 1 };
-}
-
-int getMaxColorInMatrix(const Matrix & matrix, Coordinates coordinates, Color colorToSearch, unordered_set<Coordinates> & visitedCells)
+int getMaxColorInMatrix(const Matrix<Color> & matrix, Coordinates coordinates, Color colorToSearch, unordered_set<Coordinates> & visitedCells)
 {
     if (visitedCells.count(coordinates))
         return 0;
@@ -83,7 +29,7 @@ int getMaxColorInMatrix(const Matrix & matrix, Coordinates coordinates, Color co
         return 0;
 }
 
-ColorResult getMaxColorInMatrix(const vector<vector<Color>> & matrix)
+ColorResult getMaxColorInMatrix(const Matrix<Color> & matrix)
 {
     if (matrix.empty())
     {
@@ -114,7 +60,7 @@ ColorResult getMaxColorInMatrix(const vector<vector<Color>> & matrix)
 int main()
 {
     // Expected result = Blue(1), count 8
-    vector<vector<Color>> matrix = {{Color::Red,  Color::Red,  Color::Red,  Color::Green, Color::Green},
+    Matrix<Color> matrix =         {{Color::Red,  Color::Red,  Color::Red,  Color::Green, Color::Green},
                                     {Color::Blue, Color::Blue, Color::Red,  Color::Red,   Color::Green},
                                     {Color::Blue, Color::Blue, Color::Red,  Color::Red,   Color::Green},
                                     {Color::Blue, Color::Blue, Color::Blue, Color::Blue, Color::Green}};

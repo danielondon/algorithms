@@ -55,7 +55,6 @@ std::ostream& operator<< (std::ostream& stream, const Color& color)
     stream<<convertEnumToUnderlyingType(color);
 }
 
-
 struct Node
 {
     //int value;
@@ -190,5 +189,63 @@ struct Graph
 
 private:
     vector<shared_ptr<Vertex>> nodes;
+};
+
+// ----------------- Matrix and Coordinates ----------------
+struct Coordinates
+{
+    int i;
+    int j;
+    string toString() const { return std::to_string(i) + "-" + std::to_string(j); }
+    bool operator==(const Coordinates& other) const
+    {
+        return i == other.i && j == other.j;
+    }
 
 };
+
+namespace std {
+    template <>
+    struct hash<Coordinates>
+    {
+        size_t operator()(const Coordinates & x) const
+        {
+            std::hash<std::string> h;
+            return h(x.toString());
+        }
+    };
+}
+
+
+template <class T>
+using Matrix = vector<vector<T>>;
+
+template <class T>
+bool inBounds (Coordinates coordinates, const Matrix<T> matrix)
+{
+    if (coordinates.i >= 0 && coordinates.i < matrix.size()
+            && !matrix.empty()
+            && coordinates.j >= 0 && coordinates.j < matrix.front().size())
+        return true;
+    return false;
+}
+
+Coordinates goUp(Coordinates coordinates)
+{
+    return { coordinates.i - 1, coordinates.j };
+}
+
+Coordinates goDown(Coordinates coordinates)
+{
+    return { coordinates.i + 1, coordinates.j };
+}
+
+Coordinates goLeft(Coordinates coordinates)
+{
+    return { coordinates.i, coordinates.j - 1};
+}
+
+Coordinates goRight(Coordinates coordinates)
+{
+    return { coordinates.i, coordinates.j + 1 };
+}

@@ -1,6 +1,7 @@
 #include <sstream>
 #include <iostream>
 #include <vector>
+#include <unordered_set>
 #include <iterator> // for ostream_iterator
 #include <algorithm>
 #include <memory>
@@ -10,6 +11,15 @@
 
 using namespace std;
 
+template<typename EnumType>
+using UnderlyingType = typename std::underlying_type<EnumType>::type;
+
+template<typename EnumType>
+constexpr auto convertEnumToUnderlyingType(EnumType enumValue) -> UnderlyingType<EnumType>
+{
+    return static_cast<UnderlyingType<EnumType>>(enumValue);
+}
+
 template <typename TCollection>
 void printCollection(TCollection const& collection)
 {
@@ -18,17 +28,33 @@ void printCollection(TCollection const& collection)
     cout<<endl;
 }
 
-void printVector(const vector<int> & numbers)
+template <class T>
+void printVector(const vector<T> & numbers)
 {
-    std::for_each(numbers.cbegin(), numbers.cend(), [] (const int c) {std::cout << c << " ";} );
+    std::for_each(numbers.cbegin(), numbers.cend(), [] (const T c) {std::cout << c << " ";} );
     cout<<endl;
 }
 
-void printMatrix(const vector<vector<int>> & matrix)
+template <class T>
+void printMatrix(const vector<vector<T>> & matrix)
 {
     std::for_each(matrix.cbegin(), matrix.cend(), [] (const auto& v) { printVector(v); } );
     cout<<endl;
 }
+
+enum class Color
+{
+    Red,
+    Blue,
+    Green,
+    Invalid
+};
+
+std::ostream& operator<< (std::ostream& stream, const Color& color)
+{
+    stream<<convertEnumToUnderlyingType(color);
+}
+
 
 struct Node
 {

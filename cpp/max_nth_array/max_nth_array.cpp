@@ -63,7 +63,7 @@ int maxNthElement(vector<int> myArray, size_t nth)
 
 int main()
 {
-    auto elements = { 10, 2, 5, 6, 11, 3, 15};
+    vector<int> elements = { 10, 2, 5, 6, 11, 3, 15};
     auto n = 5;
     cout<<"*****"<<endl;
     printVector(elements);

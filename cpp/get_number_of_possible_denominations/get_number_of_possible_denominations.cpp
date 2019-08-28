@@ -1,15 +1,6 @@
-#include <iostream>
-#include <vector>
+#include "common.h"
 
 using namespace std;
-
-template <typename TCollection>
-void printCollection(TCollection const& collection)
-{
-	for (auto const& value : collection)
-        cout<< value <<" ";
-    cout<<endl;
-}
 
 int getAmountOfPossibleCombinations(int desiredSum, vector<int> denominaciones, int currentSum)
 {

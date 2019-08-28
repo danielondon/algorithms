@@ -10,6 +10,14 @@
 
 using namespace std;
 
+template <typename TCollection>
+void printCollection(TCollection const& collection)
+{
+    for (auto const& value : collection)
+        cout<< value <<" ";
+    cout<<endl;
+}
+
 void printVector(const vector<int> & numbers)
 {
     std::for_each(numbers.cbegin(), numbers.cend(), [] (const int c) {std::cout << c << " ";} );

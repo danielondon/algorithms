@@ -2,14 +2,6 @@
 
 using namespace std;
 
-template <typename TCollection>
-void printCollection(TCollection const& collection)
-{
-	for (auto const& value : collection)
-		cout << value << " ";
-	cout << endl;
-}
-
 string convertVectorToString(const std::vector<int> numbers)
 {
     ostringstream ssNum;

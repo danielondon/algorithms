@@ -9,7 +9,7 @@ struct ColorResult
     int amountCells = 0;
 };
 
-int getMaxColorInMatrix(const Matrix<Color> & matrix, Coordinates coordinates, Color colorToSearch, unordered_set<Coordinates> & visitedCells)
+int getMaxColorInMatrix(const Matrix<Color> & matrix, Position coordinates, Color colorToSearch, unordered_set<Position> & visitedCells)
 {
     if (visitedCells.count(coordinates))
         return 0;
@@ -20,10 +20,10 @@ int getMaxColorInMatrix(const Matrix<Color> & matrix, Coordinates coordinates, C
     if (colorToSearch == matrix[coordinates.i][coordinates.j])
     {
         visitedCells.insert(coordinates);
-        return 1 + getMaxColorInMatrix(matrix, goUp(coordinates), colorToSearch, visitedCells)
-                + getMaxColorInMatrix(matrix, goDown(coordinates), colorToSearch, visitedCells)
-                + getMaxColorInMatrix(matrix, goLeft(coordinates), colorToSearch, visitedCells)
-                + getMaxColorInMatrix(matrix, goRight(coordinates), colorToSearch, visitedCells);
+        return 1 + getMaxColorInMatrix(matrix, coordinates.goUp(), colorToSearch, visitedCells)
+                + getMaxColorInMatrix(matrix, coordinates.goDown(), colorToSearch, visitedCells)
+                + getMaxColorInMatrix(matrix, coordinates.goLeft(), colorToSearch, visitedCells)
+                + getMaxColorInMatrix(matrix, coordinates.goRight(), colorToSearch, visitedCells);
     }
     else
         return 0;
@@ -38,7 +38,7 @@ ColorResult getMaxColorInMatrix(const Matrix<Color> & matrix)
 
     ColorResult colorResult;
 
-    unordered_set<Coordinates> visitedCells;
+    unordered_set<Position> visitedCells;
 
     for (size_t i = 0; i < matrix.size(); ++i)
     {

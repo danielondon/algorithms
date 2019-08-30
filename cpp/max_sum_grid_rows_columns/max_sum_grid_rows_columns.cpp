@@ -15,7 +15,7 @@ enum class Direction
     All
 };
 
-int maxValueOfF(Matrix<int> const& matrix, Coordinates pos, int valueToLookup, Direction direction)
+int maxValueOfF(Matrix<int> const& matrix, Position pos, int valueToLookup, Direction direction)
 {
     if (!inBounds(pos, matrix))
     {
@@ -33,13 +33,13 @@ int maxValueOfF(Matrix<int> const& matrix, Coordinates pos, int valueToLookup, D
     }
 
     if (direction == Direction::All || direction == Direction::Up)
-        count += maxValueOfF(matrix, goUp(pos), valueToLookup, Direction::Up);
+        count += maxValueOfF(matrix, pos.goUp(), valueToLookup, Direction::Up);
     if (direction == Direction::All || direction == Direction::Down)
-        count += maxValueOfF(matrix, goDown(pos), valueToLookup, Direction::Down);
+        count += maxValueOfF(matrix, pos.goDown(), valueToLookup, Direction::Down);
     if (direction == Direction::All || direction == Direction::Left)
-        count += maxValueOfF(matrix, goLeft(pos), valueToLookup, Direction::Left);
+        count += maxValueOfF(matrix, pos.goLeft(), valueToLookup, Direction::Left);
     if (direction == Direction::All || direction == Direction::Right)
-        count += maxValueOfF(matrix, goRight(pos), valueToLookup, Direction::Right) ;
+        count += maxValueOfF(matrix, pos.goRight(), valueToLookup, Direction::Right) ;
     return count;
 }
 

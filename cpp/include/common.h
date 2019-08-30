@@ -192,23 +192,43 @@ private:
 };
 
 // ----------------- Matrix and Coordinates ----------------
-struct Coordinates
+struct Position
 {
     int i;
     int j;
     string toString() const { return std::to_string(i) + "-" + std::to_string(j); }
-    bool operator==(const Coordinates& other) const
+    bool operator==(const Position& other) const
     {
         return i == other.i && j == other.j;
     }
 
+
+    Position goUp() const
+    {
+        return { i - 1, j };
+    }
+
+    Position goDown() const
+    {
+        return { i + 1, j };
+    }
+
+    Position goLeft() const
+    {
+        return { i, j - 1};
+    }
+
+    Position goRight() const
+    {
+        return { i, j + 1 };
+    }
 };
 
 namespace std {
     template <>
-    struct hash<Coordinates>
+    struct hash<Position>
     {
-        size_t operator()(const Coordinates & x) const
+        size_t operator()(const Position & x) const
         {
             std::hash<std::string> h;
             return h(x.toString());
@@ -221,31 +241,18 @@ template <class T>
 using Matrix = vector<vector<T>>;
 
 template <class T>
-bool inBounds (Coordinates coordinates, const Matrix<T> matrix)
+bool inBounds (Position coordinates, const Matrix<T> matrix)
 {
-    if (coordinates.i >= 0 && coordinates.i < matrix.size()
-            && !matrix.empty()
-            && coordinates.j >= 0 && coordinates.j < matrix.front().size())
+    if (matrix.empty())
+        return false;
+
+    return inBounds(coordinates, matrix.size(), matrix.front().size());
+}
+
+bool inBounds (Position coordinates, int rows, int cols)
+{
+    if (coordinates.i >= 0 && coordinates.i < rows
+            && coordinates.j >= 0 && coordinates.j < cols)
         return true;
     return false;
-}
-
-Coordinates goUp(Coordinates coordinates)
-{
-    return { coordinates.i - 1, coordinates.j };
-}
-
-Coordinates goDown(Coordinates coordinates)
-{
-    return { coordinates.i + 1, coordinates.j };
-}
-
-Coordinates goLeft(Coordinates coordinates)
-{
-    return { coordinates.i, coordinates.j - 1};
-}
-
-Coordinates goRight(Coordinates coordinates)
-{
-    return { coordinates.i, coordinates.j + 1 };
 }

@@ -1,0 +1,2 @@
+SET(TARGET trees)
+ADD_EXECUTABLE (${TARGET} ${TARGET}.cpp)

@@ -9,7 +9,7 @@ const int DESTINATION = 9;
 const int ACCESIBLE = 1;
 const int INACCESIBLE = 0;
 
-int findMinimumDistance(int numRows, int numColumns, Matrix<int> area, Position pos, unordered_set<Position> & visitedCells)
+int findMinimumDistance(int numRows, int numColumns, const Matrix<int> & area, Position pos, unordered_set<Position> & visitedCells)
 {
     if (!inBounds(pos, numRows, numColumns))
     {
@@ -46,18 +46,72 @@ int findMinimumDistance(int numRows, int numColumns, Matrix<int> area, Position 
     return std::numeric_limits<int>::min();
 }
 
+bool isCellAccessible(Position pos, const Matrix<int> & area)
+{
+    if(inBounds(pos, area) && (area[pos.i][pos.j] == ACCESIBLE || area[pos.i][pos.j] == DESTINATION))
+        return true;
+    return false;
+}
+
+bool isPositionIsolated(Position pos, const Matrix<int> & area)
+{
+    // Check if the pos is ACCESSIBLE
+    if (!isCellAccessible(pos, area))
+    {
+        return false;
+    }
+
+    int countAdjacentCells = 0;
+
+    // Check adjacent cells
+    if (isCellAccessible(pos.goLeft(), area))
+        ++countAdjacentCells;
+    if (isCellAccessible(pos.goRight(), area))
+        ++countAdjacentCells;
+    if (isCellAccessible(pos.goUp(), area))
+        ++countAdjacentCells;
+    if (isCellAccessible(pos.goDown(), area))
+        ++countAdjacentCells;
+
+    if(countAdjacentCells == 0)
+        return true;
+    return false;
+}
+
 // FUNCTION SIGNATURE BEGINS, THIS FUNCTION IS REQUIRED
 int minimumDistance(int numRows, int numColumns, Matrix<int> area)
 {
     // WRITE YOUR CODE HERE
     int minDistance = -1;
     
+    int countStores = 0;
+    int countDestinations = 0;
+
+
     unordered_set<Position> visitedCells;
     for (int i = 0; i < numRows; ++i)
     {
         for(int j = 0; j < numColumns; ++j)
         {
-            int distance = findMinimumDistance(numRows, numColumns, area, {i, j},  visitedCells);
+            Position pos = {i, j};
+
+            if (area[pos.i][pos.j] == DESTINATION || area[pos.i][pos.j] == ACCESIBLE)
+            {
+                if (isPositionIsolated(pos, area))
+                {
+                    return -1;
+                }
+                if(area[pos.i][pos.j] == DESTINATION)
+                {
+                    ++countStores;
+                }
+                else
+                {
+                    ++countDestinations;
+                }
+            }
+
+            int distance = findMinimumDistance(numRows, numColumns, area, pos,  visitedCells);
             if (distance > 0)
                 minDistance = min(minDistance, distance);
         }
@@ -73,6 +127,13 @@ int main()
                         {1, 0, 0, 0},
                         {1, 0, 0, 0},
                         {1, 9, 0, 0}};
+/*
+    Matrix<int> area = {{1, 1, 0, 0},
+                        {1, 1, 0, 0},
+                        {1, 0, 0, 0},
+                        {1, 0, 0, 0},
+                        {1, 9, 0, 0}};*/
+
 
     cout<<"Find the maximum adjancent cells with the same color"<<endl;
     printMatrix(area);

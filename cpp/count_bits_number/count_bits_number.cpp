@@ -40,7 +40,6 @@ int numSetBits(unsigned int A) {
 }
 
 
-// Print the max sum of the contiguous array
 int main()
 {
     cout<<"Num of Bits"<<endl<<endl;

@@ -4,16 +4,6 @@
 using namespace std;
 
 template <class T>
-struct NodeTree
-{
-    T value;
-    shared_ptr<NodeTree> left;
-    shared_ptr<NodeTree> right;
-
-    NodeTree(int _value) : value(_value) {}
-};
-
-template <class T>
 void preOrder(shared_ptr<NodeTree<T>> root)
 {
     if (root == nullptr)
@@ -44,33 +34,6 @@ void inOrder(shared_ptr<NodeTree<T>> root)
     inOrder(root->left);
     cout<<root->value<<" ";
     inOrder(root->right);
-}
-
-template <class T>
-void breadthSearch(shared_ptr<NodeTree<T>> root)
-{
-    queue<shared_ptr<NodeTree<T>>> queue;
-    queue.push(root);
-    int currentCount = 0;
-    int currentLevel = 1;
-    while(!queue.empty())
-    {
-        auto currentSize = queue.size();
-        cout<<queue.front()->value<<" ";
-        ++currentCount;
-        if (currentCount >= pow(2, currentLevel) - 1)
-        {
-            cout<<endl;
-            ++currentLevel;
-        }
-
-        if (queue.front()->left)
-            queue.push(queue.front()->left);
-        if (queue.front()->right)
-            queue.push(queue.front()->right);
-
-        queue.pop();
-    }
 }
 
 int main()

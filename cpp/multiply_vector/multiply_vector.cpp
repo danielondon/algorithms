@@ -1,10 +1,4 @@
-#include <iostream>
-#include <vector>
-#include <string>
-#include <sstream>
-#include <iterator> // for ostream_iterator
-#include <algorithm>
-#include <stack>
+#include <common.h>
 
 using namespace std;
 
@@ -14,14 +8,6 @@ using namespace std;
 // of integers and returns a list of the products.
 
 
-void printVector(const vector<int> & numbers)
-{
-    //for (int i : numbers)
-    //    cout << i << " ";
-    //std::copy(numbers.begin(), numbers.end(), std::ostream_iterator<int>(std::cout, " "));
-    std::for_each(numbers.cbegin(), numbers.cend(), [] (const int c) {std::cout << c << " ";} );
-    cout<<endl;
-}
 
 void get_products_of_all_ints_except_at_index(vector<int> & listIntegers )
 {

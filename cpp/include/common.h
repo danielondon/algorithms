@@ -37,6 +37,21 @@ void printVector(const vector<T> & numbers)
 }
 
 template <class T>
+void printAsBinaryTree(const vector<T> & numbers)
+{
+    auto currentLevel = 1;
+    for ( auto i = 0; i < numbers.size(); ++i)
+    {
+        cout<<numbers[i]<< " ";
+        if ((i+1) >= pow(2, currentLevel) - 1)
+        {
+            cout<<endl;
+            ++currentLevel;
+        }
+    }
+}
+
+template <class T>
 void printMatrix(const vector<vector<T>> & matrix)
 {
     std::for_each(matrix.cbegin(), matrix.cend(), [] (const auto& v) { printVector(v); } );
@@ -256,4 +271,42 @@ bool inBounds (Position coordinates, int rows, int cols)
             && coordinates.j >= 0 && coordinates.j < cols)
         return true;
     return false;
+}
+
+template <class T>
+struct NodeTree
+{
+    T value;
+    shared_ptr<NodeTree> left;
+    shared_ptr<NodeTree> right;
+
+    NodeTree(int _value) : value(_value) {}
+};
+
+
+template <class T>
+void breadthSearch(shared_ptr<NodeTree<T>> root)
+{
+    queue<shared_ptr<NodeTree<T>>> queue;
+    queue.push(root);
+    int currentCount = 0;
+    int currentLevel = 1;
+    while(!queue.empty())
+    {
+        auto currentSize = queue.size();
+        cout<<queue.front()->value<<" ";
+        ++currentCount;
+        if (currentCount >= pow(2, currentLevel) - 1)
+        {
+            cout<<endl;
+            ++currentLevel;
+        }
+
+        if (queue.front()->left)
+            queue.push(queue.front()->left);
+        if (queue.front()->right)
+            queue.push(queue.front()->right);
+
+        queue.pop();
+    }
 }
